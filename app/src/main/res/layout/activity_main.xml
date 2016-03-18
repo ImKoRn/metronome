@@ -113,7 +113,6 @@
                     android:nextFocusUp="@id/controls"
                     android:ems="10"
                     android:textSize="35sp"
-                    android:hint="@string/hintToBpmValueEditText"
                     android:background="@android:color/transparent"
                     android:id="@+id/bpmValueEditText"
                     android:text="100"

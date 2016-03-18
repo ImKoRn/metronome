@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static ToggleButton mIndicator;
     private static IndicatorLightOperator mIndicatorOperator;
+    private boolean mError = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,9 +112,9 @@ public class MainActivity extends AppCompatActivity {
 
                     if (mBpm <= 0) mBpm = MIN_VALUE;
                     if (mBpm > MAX_VALUE + MIN_VALUE - 1) mBpm = MAX_VALUE;
-
+                    mError = false;
                     updateProgress();
-                } else mBpmValueEditText.setError("Only numbers allowed");
+                } else  mError = true;
             }
 
             @Override
@@ -126,6 +127,12 @@ public class MainActivity extends AppCompatActivity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(mError) {
+                    mBpmValueEditText.setError("Invalid data");
+                    mBpmValueEditText.requestFocus();
+                    return;
+                }
+
                 if (mServiceData == null) {
                     mServiceIntent.putExtra(EXTRA_BPM_VALUE, mBpm);
                     mServiceIntent.putExtra(EXTRA_FLASHLIGHT_STATUS, mIsFlashlightEnabled);

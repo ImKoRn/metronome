@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Metronome</string>
+    <string name="hintToBpmValueEditText">Bits here</string>
+    <string name="helperMsg">Set Bpm you need below</string>
+    <string name="metricsText">bpm</string>
+    <string name="indicatorHelperText">Indicator</string>
+    <string name="startActionBtnMsg">Start</string>
+    <string name="stopActionBtnMsg">Stop</string>
+</resources>

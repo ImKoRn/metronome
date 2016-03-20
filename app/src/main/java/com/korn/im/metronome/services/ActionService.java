@@ -8,13 +8,14 @@ import android.media.MediaPlayer;
 import android.os.Vibrator;
 
 import com.korn.im.metronome.R;
-import com.korn.im.metronome.activity.MainActivity;
+import com.korn.im.metronome.activitys.MainActivity;
 
 public class ActionService extends IntentService {
     private Vibrator mVibrator;
     private MediaPlayer mMediaPlayer;
     private Camera mCamera = null;
     private Parameters mParameters;
+    private Intent mActionIntent = new Intent(MainActivity.ACTION_ACTION);
     private boolean mIsRunning;
 
     public ActionService() {
@@ -33,15 +34,21 @@ public class ActionService extends IntentService {
         setupFlashlight(intent);
         setupSignal(intent);
 
-        int delay = (60 * 1000) / intent.getIntExtra(MainActivity.EXTRA_BPM_VALUE, 1) ;
+        int delay = (60 * 1000) / intent.getIntExtra(MainActivity.EXTRA_BPM_VALUE, 80) ;
 
         mIsRunning = true;
         while (mIsRunning) {
-            if(mMediaPlayer != null)
+            sendBroadcast(mActionIntent);
+
+            if(mMediaPlayer != null) {
                 mMediaPlayer.start();
-            if(mVibrator != null)
+            }
+            if(mVibrator != null) {
                 mVibrator.vibrate(100);
+            }
             cameraBlink();
+
+            sendBroadcast(mActionIntent);
             try {
                 Thread.sleep(delay);
             } catch (InterruptedException e) {

@@ -1,8 +1,8 @@
-package com.korn.im.metronome.activity;
+package com.korn.im.metronome.activitys;
 
 import android.content.ComponentName;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.content.IntentFilter;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -14,14 +14,17 @@ import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.ToggleButton;
 
+import com.korn.im.metronome.receivers.ActionReceiver;
 import com.korn.im.metronome.R;
 import com.korn.im.metronome.services.ActionService;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ActionReceiver.ActionListener {
     public static final String EXTRA_BPM_VALUE = "bpm_val";
     public static final String EXTRA_SOUND_STATUS = "s_status";
     public static final String EXTRA_VIBRATION_STATUS = "v_status";
     public static final String EXTRA_FLASHLIGHT_STATUS = "f_status";
+
+    public static final String ACTION_ACTION = "com.korn.im.metronome.action";
 
     private static final int MAX_VALUE = 200;
     private static final int MIN_VALUE = 80;
@@ -38,9 +41,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean mIsSoundEnabled = true;
     private boolean mIsVibrationEnabled = true;
 
-    private static ToggleButton mIndicator;
-    private static IndicatorLightOperator mIndicatorOperator;
+    private ToggleButton mIndicator;
     private boolean mError = false;
+    private ActionReceiver mActionReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +52,12 @@ public class MainActivity extends AppCompatActivity {
 
         mServiceIntent = new Intent(MainActivity.this, ActionService.class);
         initiateUI();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        registerReceiver(mActionReceiver = new ActionReceiver(this), new IntentFilter(ACTION_ACTION));
     }
 
     private void initiateUI() {
@@ -138,13 +147,12 @@ public class MainActivity extends AppCompatActivity {
                     mServiceIntent.putExtra(EXTRA_FLASHLIGHT_STATUS, mIsFlashlightEnabled);
                     mServiceIntent.putExtra(EXTRA_SOUND_STATUS, mIsSoundEnabled);
                     mServiceIntent.putExtra(EXTRA_VIBRATION_STATUS, mIsVibrationEnabled);
-                    startIndicator();
+
                     mServiceData = startService(mServiceIntent);
 
                     btn.setText(getString(R.string.stopActionBtnMsg));
 
                 } else {
-                    stopIndicator();
                     stopService(mServiceIntent);
                     mServiceData = null;
 
@@ -156,20 +164,6 @@ public class MainActivity extends AppCompatActivity {
         updateProgress();
     }
 
-    private void startIndicator() {
-        if(mIndicatorOperator == null) {
-            mIndicatorOperator = new IndicatorLightOperator();
-            mIndicatorOperator.execute(mBpm);
-        }
-    }
-
-    private void stopIndicator() {
-        if(mIndicatorOperator != null) {
-            mIndicatorOperator.cancel(false);
-            mIndicator.setChecked(true);
-        }
-    }
-
     private void updateProgress() {
         if(mBpmSeekBar.getProgress() != mBpm - MIN_VALUE)
             mBpmSeekBar.setProgress(mBpm - MIN_VALUE);
@@ -178,40 +172,15 @@ public class MainActivity extends AppCompatActivity {
             mBpmValueEditText.setText(mBpm + "");
     }
 
-    private class IndicatorLightOperator extends AsyncTask<Integer, Void, Void> {
-        @Override
-        protected Void doInBackground(Integer... params) {
-            int delay = (60 * 1000) / params[0];
-            while (!isCancelled()) {
-                try {
-                    publishProgress();
-                    Thread.sleep(100);
-                    publishProgress();
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if(mActionReceiver != null)
+        unregisterReceiver(mActionReceiver);
+    }
 
-                    Thread.sleep(delay);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(Void... values) {
-            super.onProgressUpdate(values);
-            mIndicator.setChecked(!mIndicator.isChecked());
-        }
-
-        @Override
-        protected void onCancelled() {
-            super.onCancelled();
-            mIndicatorOperator = null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            mIndicatorOperator = null;
-        }
+    @Override
+    public void onAction() {
+        mIndicator.setChecked(!mIndicator.isChecked());
     }
 }
